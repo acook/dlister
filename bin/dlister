@@ -3,13 +3,13 @@
 begin
   require 'dlister'
 rescue LoadError => error
-  def find_real_path some_path = File.dirname(__FILE__)
-    path = File.expand_path some_path
-
-    if File.directory? path then
+  def delink path
+    if File.symlink? path then
+      delink File.readlink(path)
+    elsif File.directory? path then
       path
-    elsif File.symlink? path then
-      find_real_path File.readlink(path)
+    elsif File.file? path then
+      File.dirname path
     elsif !(File.exists? path) then
       raise 'Path not found!'
     else
@@ -17,8 +17,13 @@ rescue LoadError => error
     end
   end
 
-  $LOAD_PATH << File.join(find_real_path, '..', 'lib')
+  def find_real_path some_path = __FILE__
+    path = File.expand_path some_path
 
+    delink path
+  end
+
+  $LOAD_PATH << File.join(find_real_path, '..', 'lib')
   require 'dlister'
 end
 
