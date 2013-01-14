@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+begin
+  require 'dlister'
+rescue LoadError
+  def find_real_path some_path = File.dirname(__FILE__)
+    path = File.expand_path some_path
+
+    if File.directory? path then
+      path
+    elsif File.symlink? path then
+      find_real_path File.readlink(path)
+    elsif !(File.exists? path) then
+      raise 'Path not found!'
+    else
+      raise 'Sanity check.. what did you DO?!'
+    end
+  end
+
+  $LOAD_PATH << File.join(find_real_path, '..', 'lib')
+
+  retry
+end
+
+puts Dlister.list(Dir.pwd).to_s
+

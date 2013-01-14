@@ -1,5 +1,9 @@
 require "dlister/version"
 
 module Dlister
-  # Your code goes here...
+  module_function
+
+  def list path
+    `ls #{path}`
+  end
 end
