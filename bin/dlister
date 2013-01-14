@@ -2,7 +2,7 @@
 
 begin
   require 'dlister'
-rescue LoadError
+rescue LoadError => error
   def find_real_path some_path = File.dirname(__FILE__)
     path = File.expand_path some_path
 
@@ -19,8 +19,9 @@ rescue LoadError
 
   $LOAD_PATH << File.join(find_real_path, '..', 'lib')
 
-  retry
+  require 'dlister'
 end
 
-puts Dlister.list(Dir.pwd).to_s
+path = ARGV.first || Dir.pwd
+puts Dlister.list(path).to_s
 
