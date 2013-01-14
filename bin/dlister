@@ -22,6 +22,28 @@ rescue LoadError => error
   require 'dlister'
 end
 
-path = ARGV.first || Dir.pwd
-puts Dlister.list(path).to_s
+def list path
+  puts Dlister.list(path).to_s
+end
+
+def count
+  @paths.length
+end
+
+def not_last? index
+  index + 1 < count
+end
+
+def many?
+  count > 1
+end
+
+@paths = ARGV.empty? ? [Dir.pwd] : ARGV
+
+@paths.sort.each_with_index do |path, index|
+  puts "#{path}:" if many?
+  list path
+  puts if many? && not_last?(index)
+end
+
 

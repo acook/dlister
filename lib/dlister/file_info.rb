@@ -37,12 +37,20 @@ class FileInfo
     end
   end
 
+  def real_type
+    if type == :link then
+      self.class.new(path.readlink).real_type
+    else
+      type
+    end
+  end
+
   def basename
     path.basename
   end
 
   def attributes
-    {type: type}
+    {type: type, real_type: real_type}
   end
 
   def name
