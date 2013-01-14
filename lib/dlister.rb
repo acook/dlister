@@ -1,13 +1,16 @@
-require "dlister/version"
+require 'dlister/version'
 require 'dlister/dir_list'
+require 'dlister/color'
 
 module Dlister
   module_function
+  extend Dlister::Color
 
   def list paths
     @paths = paths
 
     @paths.sort.each_with_index do |path, index|
+      print normal
       puts "#{path}:" if many?
 
       puts DirList.new path
