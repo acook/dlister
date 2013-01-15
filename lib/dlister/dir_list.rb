@@ -21,26 +21,29 @@ module Dlister
     end
 
     def to_s
-      entries = entry_sort(info).map do |entry, attributes|
-        entry_to_s entry, attributes
-      end
-
+      entries = remap_entries entry_sort(info)
       clean_entries = entries.map{|entry| clean entry }
-      longest_entry = clean_entries.max{|a,b| a.length <=> b.length }
-      column_width = longest_entry.length + spacer.length
-      columns = console_width / column_width
 
-      lines = Array.new
-      entries.each_slice(columns) do |line|
-        lines << line.map do |entry|
-          entry + (' ' * (column_width - clean(entry).length))
-        end.join
+      if clean_entries.join(spacer).length < width then
+        entries.join spacer
+      else
+        longest_entry = clean_entries.max{|a,b| a.length <=> b.length }
+        column_width = longest_entry.length + spacer.length
+        columns = width / column_width
+
+        lines = Array.new
+        entries.each_slice(columns) do |line|
+          lines << line.map do |entry|
+            entry + (' ' * (column_width - clean(entry).length))
+          end.join
+        end
+        lines.join newline
       end
-      lines.join newline
     end
 
     def entry_sort entries
       order = [:directory, :executable, :file, :link, :invalid_link]
+
       entries.sort do |(entry_a, attr_a), (entry_b, attr_b)|
         rtype_a, rtype_b = attr_a[:real_type], attr_b[:real_type]
 
@@ -55,6 +58,12 @@ module Dlister
         else
           rtype_sort
         end
+      end
+    end
+
+    def remap_entries entries
+      entries.map do |entry, attributes|
+        entry_to_s entry, attributes
       end
     end
 
@@ -100,6 +109,10 @@ module Dlister
     def clean text
       ansi_color_codes = /\e\[\d+(?>(;\d+)*)m/
       text.gsub ansi_color_codes, ''
+    end
+
+    def width
+      console_width
     end
 
     def spacer
