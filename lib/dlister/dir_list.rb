@@ -46,22 +46,29 @@ module Dlister
     end
 
     def entry_sort entries
-      order = [:directory, :executable, :file, :link, :invalid_link]
+      entries.sort do |a, b|
+        sort_precendence a, b
+      end
+    end
 
-      entries.sort do |(entry_a, attr_a), (entry_b, attr_b)|
-        rtype_a, rtype_b = attr_a[:real_type], attr_b[:real_type]
+    def sort_precendence a, b
+      order = [:directory, :executable, :file, :link, :invalid_link, :not_found]
 
-        rtype_sort = order.index(rtype_a) <=> order.index(rtype_b)
+      entry_a, attr_a = a
+      entry_b, attr_b = b
 
-        if rtype_sort == 0 then
-          if entry_a =~ /^\d/ && entry_b =~ /^\d/ then
-            entry_a.to_i <=> entry_b.to_i
-          else
-            entry_a <=> entry_b
-          end
+      rtype_a, rtype_b = attr_a[:real_type], attr_b[:real_type]
+
+      rtype_sort = order.index(rtype_a) <=> order.index(rtype_b)
+
+      if rtype_sort == 0 then
+        if entry_a =~ /^\d/ && entry_b =~ /^\d/ then
+          entry_a.to_i <=> entry_b.to_i
         else
-          rtype_sort
+          entry_a <=> entry_b
         end
+      else
+        rtype_sort
       end
     end
 
