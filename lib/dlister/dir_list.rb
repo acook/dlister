@@ -25,18 +25,17 @@ module Dlister
         entry_to_s entry, attributes
       end
 
-      width = console_width
-      seed  = [[]]
+      longest_entry = clean entries.max{|a,b|cleangth(a) <=> cleangth(b)}
+      column_width = longest_entry.length + spacer.length
+      columns = console_width / column_width
 
-      entries.inject(seed) do |lines, entry|
-        if length(lines.last, entry) <= width then
-          lines[-1] << entry
-        else
-          lines[-1] = lines[-1].join spacer
-          lines << [entry]
-        end
-        lines
-      end.join newline
+      lines = Array.new
+      entries.each_slice(columns) do |line|
+        lines << line.map do |entry|
+          entry + (' ' * (column_width - clean(entry).length))
+        end.join
+      end
+      lines.join newline
     end
 
     def sorted
@@ -110,7 +109,7 @@ module Dlister
       end
     end
 
-    def length *text
+    def cleangth *text
       clean(text.join spacer).length
     end
 
