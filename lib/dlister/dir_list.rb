@@ -26,11 +26,10 @@ module Dlister
       end
 
       width = console_width
-      spacer = '  '
-      newline = "\n"
+      seed  = [[]]
 
-      entries.inject([[]]) do |lines, entry|
-        if length(lines.last + [entry], spacer) <= width then
+      entries.inject(seed) do |lines, entry|
+        if length(lines.last, entry) <= width then
           lines[-1] << entry
         else
           lines[-1] = lines[-1].join spacer
@@ -111,13 +110,21 @@ module Dlister
       end
     end
 
-    def length text, spacer = ''
-      cleaned(text.join spacer).length
+    def length *text
+      clean(text.join spacer).length
     end
 
-    def cleaned text
+    def clean text
       ansi_color_codes = /\e\[\d+(?>(;\d+)*)m/
       text.gsub ansi_color_codes, ''
+    end
+
+    def spacer
+      '  '
+    end
+
+    def newline
+      "\n"
     end
   end
 end
