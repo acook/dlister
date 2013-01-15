@@ -21,17 +21,23 @@ module Dlister
     end
 
     def to_s
-      width = console_width
-      sorted.inject(String.new) do |text, (entry, attributes)|
-        entry_text = entry_to_s entry, attributes
-
-        if length(text, entry_text) > width then
-          text << "\n"
-          width *= 2
-        end
-
-        text << "#{entry_text}  "
+      entries = sorted.map do |(entry, attributes)|
+        entry_to_s entry, attributes
       end
+
+      width = console_width
+      spacer = '  '
+      newline = "\n"
+
+      entries.inject([[]]) do |lines, entry|
+        if length(lines.last + [entry], spacer) <= width then
+          lines[-1] << entry
+        else
+          lines[-1] = lines[-1].join spacer
+          lines << [entry]
+        end
+        lines
+      end.join newline
     end
 
     def sorted
@@ -39,17 +45,17 @@ module Dlister
       to_hash.sort do |(entry_a, attr_a), (entry_b, attr_b)|
         type_a, type_b = attr_a[:real_type], attr_b[:real_type]
 
-        type_sort = order.index(type_a) <=> order.index(type_b)
+      type_sort = order.index(type_a) <=> order.index(type_b)
 
-        if type_sort == 0 then
-          if entry_a =~ /^\d/ && entry_b =~ /^\d/ then
-            entry_a.to_i <=> entry_b.to_i
-          else
-            entry_a <=> entry_b
-          end
+      if type_sort == 0 then
+        if entry_a =~ /^\d/ && entry_b =~ /^\d/ then
+          entry_a.to_i <=> entry_b.to_i
         else
-          type_sort
+          entry_a <=> entry_b
         end
+      else
+        type_sort
+      end
       end
     end
 
@@ -105,8 +111,13 @@ module Dlister
       end
     end
 
-    def length *text
-      text.join.gsub(/\e\[\d+(?>(;\d+)*)m/, '').length
+    def length text, spacer = ''
+      cleaned(text.join spacer).length
+    end
+
+    def cleaned text
+      ansi_color_codes = /\e\[\d+(?>(;\d+)*)m/
+      text.gsub ansi_color_codes, ''
     end
   end
 end
