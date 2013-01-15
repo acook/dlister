@@ -14,6 +14,8 @@ Features
 - 256-color support (planned)
 - SCM (git) integration (planned)
 
+![Action Shot!](http://i.imgur.com/PlPqp.png?1)
+
 Installation
 ------------
 
