@@ -27,18 +27,22 @@ module Dlister
       if clean_entries.join(spacer).length < width then
         entries.join spacer
       else
-        longest_entry = clean_entries.max{|a,b| a.length <=> b.length }
-        column_width = longest_entry.length + spacer.length
-        columns = width / column_width
-
-        lines = Array.new
-        entries.each_slice(columns) do |line|
-          lines << line.map do |entry|
-            entry + (' ' * (column_width - clean(entry).length))
-          end.join
-        end
-        lines.join newline
+        columnize entries, clean_entries
       end
+    end
+
+    def columnize entries, clean_entries
+      longest_entry = clean_entries.max{|a,b| a.length <=> b.length }
+      column_width = longest_entry.length + spacer.length
+      columns = width / column_width
+
+      lines = Array.new
+      entries.each_slice(columns) do |line|
+        lines << line.map do |entry|
+          entry + (' ' * (column_width - clean(entry).length))
+        end.join
+      end
+      lines.join newline
     end
 
     def entry_sort entries
@@ -112,7 +116,7 @@ module Dlister
     end
 
     def width
-      console_width
+      @width ||= console_width
     end
 
     def spacer
