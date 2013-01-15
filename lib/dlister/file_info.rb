@@ -26,6 +26,8 @@ class FileInfo
       else
         :not_found
       end
+    elsif path.symlink? then
+      :link
     elsif path.executable? then
       if path.directory? then
         :directory

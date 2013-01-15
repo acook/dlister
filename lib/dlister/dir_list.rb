@@ -21,11 +21,12 @@ module Dlister
     end
 
     def to_s
-      entries = sorted.map do |(entry, attributes)|
+      entries = entry_sort(info).map do |entry, attributes|
         entry_to_s entry, attributes
       end
 
-      longest_entry = clean entries.max{|a,b|cleangth(a) <=> cleangth(b)}
+      clean_entries = entries.map{|entry| clean entry }
+      longest_entry = clean_entries.max{|a,b| a.length <=> b.length }
       column_width = longest_entry.length + spacer.length
       columns = console_width / column_width
 
@@ -38,40 +39,28 @@ module Dlister
       lines.join newline
     end
 
-    def sorted
+    def entry_sort entries
       order = [:directory, :executable, :file, :link, :invalid_link]
-      to_hash.sort do |(entry_a, attr_a), (entry_b, attr_b)|
-        type_a, type_b = attr_a[:real_type], attr_b[:real_type]
+      entries.sort do |(entry_a, attr_a), (entry_b, attr_b)|
+        rtype_a, rtype_b = attr_a[:real_type], attr_b[:real_type]
 
-      type_sort = order.index(type_a) <=> order.index(type_b)
+        rtype_sort = order.index(rtype_a) <=> order.index(rtype_b)
 
-      if type_sort == 0 then
-        if entry_a =~ /^\d/ && entry_b =~ /^\d/ then
-          entry_a.to_i <=> entry_b.to_i
+        if rtype_sort == 0 then
+          if entry_a =~ /^\d/ && entry_b =~ /^\d/ then
+            entry_a.to_i <=> entry_b.to_i
+          else
+            entry_a <=> entry_b
+          end
         else
-          entry_a <=> entry_b
+          rtype_sort
         end
-      else
-        type_sort
       end
-      end
-    end
-
-    def to_a
-      to_hash.inject(Array.new) do |list, (entry, attributes)|
-        list << [
-          entry,
-          attributes
-      ]
-      end
-    end
-
-    def to_hash
-      info #.merge git
     end
 
     def entry_to_s entry, attributes
       type = attributes[:type]
+      real_type = attributes[:real_type]
 
       text = String.new
 
@@ -81,36 +70,31 @@ module Dlister
       text << normal
       text << glyphmap(type)
 
-      text << normal
-      text << bright(:black)
-      text << ':'
-      text << type.to_s
+      if type != real_type then
+        text << glyphmap(real_type)
+      else
+        text
+      end
     end
 
     def glyphmap type
-      case type
-      when :directory  then '/'
-      when :link       then "\u2A1D"
-      when :file       then ''
-      when :executable then "\u25B7"
-      when :invalid_link then "\u02E3"
-      else ''
-      end
+      {
+        directory:    '/',
+        link:         "\u2A1D",
+        file:         '',
+        executable:   "\u25B7",
+        invalid_link: "\u02E3"
+      }[type] || ''
     end
 
     def colormap type
-      case type
-      when :directory  then bright :blue
-      when :link       then fg :yellow
-      when :file       then fg :normal
-      when :executable then bright :green
-      when :invalid_link then bg :red
-      else fg :normal
-      end
-    end
-
-    def cleangth *text
-      clean(text.join spacer).length
+      {
+        directory:    bright(:blue),
+        link:         fg(:yellow),
+        file:         fg(:normal),
+        executable:   bright(:green),
+        invalid_link: bg(:red)
+      }[type] || fg(:normal)
     end
 
     def clean text
